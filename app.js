@@ -8,6 +8,7 @@ app.use(bodyParser.json());
 
 // Gunakan middleware CORS
 app.use(cors());
+
 // Data array yang berisi kata-kata yang akan diambil secara acak
 const data = ['Tidak Ada',
     "Harimau Biskuat", "Nyi Ngaborong", "Jin Sarimi", "Maung Ompong",
@@ -51,10 +52,4 @@ app.post('/api/data', (req, res) => {
     });
 });
 
-// Port server
-const port = 3001;
-
-// Jalankan server
-app.listen(port, () => {
-    console.log(`Server berjalan di http://localhost:${port}`);
-});
+module.exports = app;

@@ -33,6 +33,9 @@ const data = ['Tidak Ada',
     "Macan Kerucut", "Harimau Keriting", "Kucing Kesasar", "Macan Kesasar", "Harimau Kentut","Dino Jahat","Dino Jahat"
     ];
 
+app.get('/', (req, res) => {
+        res.send('Hello from Express on Vercel!');
+});
 
 // Route untuk handle POST request
 app.post('/api/data', (req, res) => {

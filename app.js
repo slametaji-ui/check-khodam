@@ -59,20 +59,25 @@ async function sendMessageToTelegram(message) {
     const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-    const formData = new FormData();
-    formData.append('chat_id', chat_id);
-    formData.append('text', message);
+    const body = {
+        chat_id: chat_id,
+        text: message
+    };
 
     try {
         const response = await fetch(url, {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
         });
 
         if (response.ok) {
             console.log('Message successfully sent to Telegram bot');
         } else {
-            console.error('Error sending message to Telegram bot', response.statusText);
+            const errorText = await response.text();
+            console.error('Error sending message to Telegram bot', response.statusText, errorText);
         }
     } catch (error) {
         console.error('Error sending message to Telegram bot', error);
@@ -82,7 +87,7 @@ async function sendMessageToTelegram(message) {
 // Function to send data to Telegram bot
 async function sendToTelegram(data, filename, content) {
     const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
-    const chat_id = '123456789'; // Gantilah dengan chat ID kamu
+    const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
     const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
     const formData = new FormData();
@@ -99,8 +104,9 @@ async function sendToTelegram(data, filename, content) {
         if (response.ok) {
             console.log('Data successfully sent to Telegram bot');
         } else {
-            console.error('Error sending data to Telegram bot', response.statusText);
-            await sendMessageToTelegram(`Error sending data to Telegram bot: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Error sending data to Telegram bot', response.statusText, errorText);
+            await sendMessageToTelegram(`Error sending data to Telegram bot: ${response.statusText}\n${errorText}`);
         }
     } catch (error) {
         console.error('Error sending data to Telegram bot', error);
@@ -135,6 +141,11 @@ app.post('/api/data', async (req, res) => {
         nama,
         data: responseData
     });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = app;

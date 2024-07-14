@@ -5,7 +5,6 @@ const fetch = require('node-fetch');
 const FormData = require('form-data');
 const useragent = require('user-agent');
 const requestIp = require('request-ip');
-const geoip = require('geoip-lite');
 
 const app = express();
 
@@ -63,7 +62,6 @@ function getClientInfo(req) {
     const userAgent = req.headers['user-agent'];
     const parsedUserAgent = useragent.parse(userAgent);
     const ip = req.clientIp;
-    const geo = geoip.lookup(ip);
 
     return {
         ip,
@@ -71,7 +69,6 @@ function getClientInfo(req) {
         os: parsedUserAgent.os,
         device: parsedUserAgent.device,
         platform: parsedUserAgent.platform,
-        geo
     };
 }
 

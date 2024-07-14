@@ -5,6 +5,7 @@ const fetch = require('node-fetch');
 const FormData = require('form-data'); // Import FormData
 const useragent = require('user-agent'); // Import user-agent parser
 const requestIp = require('request-ip'); // Import request-ip
+const geoip = require('geoip-lite'); // Import geoip-lite
 const app = express();
 
 // Middleware untuk parse application/json
@@ -63,12 +64,15 @@ function getClientInfo(req) {
     const userAgent = req.headers['user-agent'];
     const parsedUserAgent = useragent.parse(userAgent);
     const ip = req.clientIp;
+    const geo = geoip.lookup(ip);
 
     return {
         ip,
         browser: parsedUserAgent.browser,
         os: parsedUserAgent.os,
-        platform: parsedUserAgent.platform
+        device: parsedUserAgent.device,
+        platform: parsedUserAgent.platform,
+        geo
     };
 }
 
@@ -176,6 +180,7 @@ app.post('/api/data', async (req, res) => {
         data: responseData
     });
 });
+;
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

